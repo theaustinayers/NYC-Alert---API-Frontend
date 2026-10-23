@@ -1,0 +1,12 @@
+{
+  "name": "nycalert-api-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static developer portal with a rate-limited read-only NYCAlert API proxy",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

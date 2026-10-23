@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080808">
+    <meta name="description" content="NYCAlert API documentation and live request explorer.">
+    <title>NYCAlert API — Developer Portal</title>
+    <link rel="icon" type="image/png" href="./assets/nycalert-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./brand.css">
+    <script src="./app.js?v=audiences-1" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#" data-home aria-label="NYCAlert API home">
+          <img class="brand-logo" src="./assets/nycalert-logo.png" alt="NYCAlert logo">
+          <span><strong>NYCAlert</strong><small>API reference</small></span>
+        </a>
+        <div class="api-status"><span class="status-dot"></span><span id="spec-status">Loading API contract</span></div>
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="nav-search" type="search" placeholder="Search docs..." autocomplete="off" aria-label="Search API documentation">
+          <kbd>/</kbd>
+        </label>
+        <nav aria-label="API documentation">
+          <p class="nav-label">GETTING STARTED</p>
+          <a href="#overview" class="nav-link active" data-page="overview">Overview</a>
+          <a href="#quickstart" class="nav-link" data-page="quickstart">Quick start</a>
+          <a href="#authentication" class="nav-link" data-page="authentication">Authentication &amp; SSO</a>
+          <a href="#audiences" class="nav-link" data-page="audiences">Audiences &amp; access</a>
+          <p class="nav-label nav-endpoints-label">API ENDPOINTS <span id="endpoint-count">17</span></p>
+          <div id="endpoint-nav" class="endpoint-nav"></div>
+          <p class="nav-label">TOOLS &amp; REFERENCE</p>
+          <a href="#sse" class="nav-link" data-page="sse"><span class="nav-icon">↗</span> SSE console</a>
+          <a href="#errors" class="nav-link" data-page="errors">Errors &amp; validation</a>
+          <a href="#openapi" class="nav-link" data-page="openapi">OpenAPI specification</a>
+        </nav>
+        <div class="sidebar-footer">
+          <span class="footer-pulse"></span>
+          <div><strong>Public API</strong><small>Approved &amp; published incidents</small></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button class="mobile-menu" id="mobile-menu" aria-label="Toggle navigation">☰</button>
+          <div class="breadcrumbs"><span>Documentation</span><span class="crumb-separator">/</span><strong id="current-section">Overview</strong></div>
+          <div class="topbar-actions">
+            <span class="api-host"><span class="host-dot"></span>api.nycalert.ai</span>
+            <a class="top-link" href="https://api.nycalert.ai/docs" target="_blank" rel="noreferrer">Swagger UI <span>↗</span></a>
+          </div>
+        </header>
+        <div class="content-wrap">
+          <section id="overview-page" class="page active">
+            <div class="hero">
+              <div class="eyebrow"><span class="eyebrow-line"></span> DEVELOPER DOCUMENTATION</div>
+              <h1>Build with <span>NYCAlert</span></h1>
+              <p class="hero-copy">Real-time intelligence for New York City incidents. Explore the API, query published data, and stream live updates.</p>
+              <div class="hero-actions">
+                <button class="button button-primary" data-open-page="quickstart">Make your first request <span>→</span></button>
+                <button class="button button-secondary" data-open-page="sse"><span class="live-indicator"></span> Open SSE console</button>
+              </div>
+              <div class="hero-code"><span class="code-prompt">$</span><code>curl https://api.nycalert.ai/health</code><button class="copy-button" data-copy="curl https://api.nycalert.ai/health" aria-label="Copy curl command">Copy</button></div>
+            </div>
+
+            <div class="stat-grid">
+              <article class="stat-card"><span class="stat-icon cyan">⌘</span><div><strong id="stat-endpoints">17</strong><span>API endpoints</span></div><small>registered</small></article>
+              <article class="stat-card"><span class="stat-icon purple">◉</span><div><strong>5</strong><span>NYC boroughs</span></div><small>citywide</small></article>
+              <article class="stat-card"><span class="stat-icon green">⌁</span><div><strong>Live</strong><span>Event streaming</span></div><small><span class="live-indicator"></span> SSE</small></article>
+            </div>
+
+            <div class="callout"><span class="callout-icon">i</span><p><strong>Audience-scoped production API:</strong> Choose <a href="#audiences" data-page="audiences">public, buff, or news</a> for audience documentation and request previews. Authenticated execution is locked until SSO and backend credentials are configured. Publishing is autonomous; human approval is not required. Legacy routes remain separately documented from the current live contract.</p></div>
+            <div class="section-heading"><div><span class="section-kicker">EXPLORE</span><h2>Start building</h2></div><span class="muted">Everything you need to connect</span></div>
+            <div class="feature-grid">
+              <button class="feature-card" data-open-page="quickstart"><span class="feature-symbol cyan">⌘</span><span class="feature-title">Quick start</span><span class="feature-copy">Make your first API request in seconds.</span><span class="feature-arrow">↗</span></button>
+              <button class="feature-card" data-open-page="incidents"><span class="feature-symbol purple">▤</span><span class="feature-title">Browse incidents</span><span class="feature-copy">Filter, search, and explore published incidents.</span><span class="feature-arrow">↗</span></button>
+              <button class="feature-card" data-open-page="sse"><span class="feature-symbol green">⌁</span><span class="feature-title">Live event stream</span><span class="feature-copy">Connect to real-time Server-Sent Events.</span><span class="feature-arrow">↗</span></button>
+            </div>
+
+            <div class="section-heading endpoint-heading"><div><span class="section-kicker">REFERENCE</span><h2>API endpoints</h2></div><button class="text-button" data-open-page="openapi">View OpenAPI spec <span>→</span></button></div>
+            <div id="overview-endpoints" class="endpoint-list"></div>
+
+            <div class="callout"><span class="callout-icon">i</span><p><strong>Data access:</strong> This API serves approved and published incidents. The portal does not expose raw radio transmissions, private editorial data, or unpublished events.</p></div>
+            <footer class="page-footer"><span>NYCAlert API · v<span id="api-version">0.1.0</span></span><span>Base URL <code>https://api.nycalert.ai</code></span></footer>
+          </section>
+
+          <section id="detail-page" class="page">
+            <div id="detail-content"></div>
+          </section>
+
+          <section id="quickstart-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> GETTING STARTED</div>
+            <h1 class="page-title">Quick start</h1>
+            <p class="page-lead">The production incident API is audience-scoped: public, buff, and news. Audience requests require backend-held credentials and an authorized user session, including the public audience.</p>
+            <div class="info-banner"><span>i</span><p>Interactive requests use this site's same-origin, read-only proxy because the API does not currently allow browser CORS requests. The proxy only permits public routes, excludes editorial operations, and is rate-limited. Code examples call the API directly.</p></div>
+            <h2>Make a request</h2>
+            <div class="code-block"><div class="code-block-head"><span>TERMINAL</span><button class="copy-button" data-copy="curl -sS https://api.nycalert.ai/health">Copy</button></div><pre><code>curl -sS https://api.nycalert.ai/health</code></pre></div>
+            <h2>Audience incident integration</h2>
+            <p>Use <code class="inline-code">GET /v1/audiences/{audience}/incidents</code> and <code class="inline-code">GET /v1/audiences/{audience}/stream</code> through an authenticated backend. <a href="#audiences" data-page="audiences">Choose an audience and review the access requirements.</a> Server-only examples are available on each audience endpoint reference. The legacy <code class="inline-code">/v1/incidents</code> API is not a substitute for audience authorization.</p>
+            <h2>Base URL</h2><p>All routes are relative to <code class="inline-code">https://api.nycalert.ai</code>. Request parameters are URL-encoded query strings.</p>
+            <div class="callout"><span class="callout-icon">!</span><p>Only rely on response fields explicitly documented for each endpoint. Some operations currently have unspecified response schemas; inspect their returned JSON instead of assuming a shape.</p></div>
+          </section>
+
+          <section id="authentication-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> GETTING STARTED</div>
+            <h1 class="page-title">Authentication &amp; SSO</h1>
+            <p class="page-lead">Audience credentials belong on a trusted backend. Audience selection never grants a user access.</p>
+            <div class="info-banner"><span>!</span><p><strong>Not configured:</strong> audience REST and SSE execution is locked. The backend rejects all audience requests until SSO, per-user audience entitlements, and verified server credentials are implemented. There is no anonymous fallback, even for public.</p></div>
+            <h2>What is verified</h2>
+            <p>The 2026-10-22 integration guide confirms <code class="inline-code">public</code>, <code class="inline-code">buff</code>, and <code class="inline-code">news</code>. Live OpenAPI declares an <code class="inline-code">authorization</code> header on both audience routes. Its exact value scheme is not documented: do not assume Bearer, an API-key header, or OAuth scopes. An optional header declaration does not mean anonymous access is authorized.</p>
+            <h2>Backend access flow</h2>
+            <ol class="documentation-list"><li>Verify the user's session with your chosen identity provider.</li><li>Map that verified identity to server-side audience entitlements.</li><li>Authorize the requested audience on every REST request and SSE connection.</li><li>Attach the matching audience credential only on the backend; reject mismatches.</li><li>Disable private response caching and audit access without recording tokens or incident payloads.</li></ol>
+            <p>SSO is an application integration, not a confirmed native NYCAlert endpoint. No identity provider, login flow, or token transport is enabled by this documentation site.</p>
+            <h2>Keep credentials secure</h2>
+            <p>Never put audience credentials in JavaScript, HTML, localStorage, URLs, or copyable browser requests. Future backend configuration may use <code class="inline-code">NYCALERT_AUDIENCE</code>, <code class="inline-code">NYCALERT_AUTH_HEADER_NAME</code>, and <code class="inline-code">NYCALERT_AUTH_HEADER_VALUE</code>; those variables do not unlock this portal today.</p>
+          </section>
+
+          <section id="audiences-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> AUDIENCE-SCOPED API</div>
+            <h1 class="page-title">Audiences &amp; access</h1>
+            <p class="page-lead">Explore the public, buff, and news audience routes. Visibility is enforced by the API, not by filtering an unrestricted feed in the browser.</p>
+            <div class="audience-controls">
+              <label for="audience-select">Audience<select id="audience-select" class="param-input" aria-describedby="selected-audience-info"></select></label>
+              <label for="audience-limit">Incident limit <span>OpenAPI: 1–100, default 20</span><input id="audience-limit" class="param-input" type="number" min="1" max="100" value="20"></label>
+              <button class="button button-secondary" disabled>Audience requests locked</button>
+            </div>
+            <p id="selected-audience-info" class="page-lead"></p>
+            <div class="info-banner" role="status"><span>!</span><p>SSO and backend audience credentials are not configured. Selection updates documentation only; no audience data is loaded, and requests for public, buff, and news are all denied by the portal backend.</p></div>
+            <h2>Request previews</h2>
+            <div class="code-block"><div class="code-block-head"><span>PRODUCTION REST · AUTHENTICATION REQUIRED</span></div><pre><code id="audience-rest-url"></code></pre></div>
+            <div class="code-block"><div class="code-block-head"><span>PRODUCTION SSE · AUTHENTICATION REQUIRED</span></div><pre><code id="audience-stream-url"></code></pre></div>
+            <h2>Contract and verification status</h2>
+            <ul class="documentation-list">
+              <li><strong>Verified in live OpenAPI:</strong> both audience routes, REST limit 1–100 (default 20), an authorization header, and a nonnegative SSE since_id parameter.</li>
+              <li><strong>Confirmed by the guide:</strong> audience IDs public, buff, and news; autonomous evidence-validated publication; audience credentials stay server-side.</li>
+              <li><strong>Observed in the guide:</strong> incident.created, numeric event IDs, and heartbeat delivery. These observations are not a complete event or response schema.</li>
+              <li><strong>To verify with authorized access:</strong> exact credential value scheme, per-audience response shapes, replay behavior, cross-audience isolation, rejected/held-event exclusion, heartbeat interval, rate limits, CORS, and any additional filters.</li>
+            </ul>
+            <p>Do not assume audience roles have particular priorities, delays, or fields: the guide does not define them. Returned publication timestamps identify published claims; preliminary reports should not be presented as confirmed facts. No human editorial approval is required for live publication.</p>
+            <div class="hero-actions"><button class="button button-primary" data-open-page="sse">Audience SSE console →</button><button class="button button-secondary" data-open-page="authentication">Authentication requirements</button></div>
+          </section>
+
+          <section id="sse-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> REAL-TIME API</div>
+            <h1 class="page-title">SSE developer console <span class="live-badge"><span class="live-indicator"></span> LIVE STREAM</span></h1>
+            <p class="page-lead">Connect to published incident events in real time using Server-Sent Events.</p>
+            <div class="callout"><span class="callout-icon">i</span><p>SSE delivers published events visible to the requesting audience, not every raw radio transmission. The event response schema is unspecified by OpenAPI.</p></div>
+            <div class="audience-controls"><label for="sse-audience">Audience / stream source<select class="param-input" id="sse-audience"></select></label></div>
+            <div class="info-banner" role="status"><span>!</span><p id="sse-access-note"></p></div>
+            <div class="sse-panel">
+              <div class="sse-config">
+                <label>Replay cursor <span>since_id · integer ≥ 0</span><input id="sse-since" type="number" min="0" placeholder="Optional"></label>
+                <label>Event type <span>type · 1–100 characters</span><input id="sse-type" type="text" maxlength="100" placeholder="All events (default)" aria-describedby="sse-type-help"></label>
+                <button class="button button-primary connect-button" id="sse-toggle"><span class="connect-mark">▶</span> Connect to stream</button>
+                <small class="sse-field-help" id="sse-type-help" style="grid-column: 1 / -1;">Leave blank or enter “all” for every published event. Other values are passed to the API as a type filter.</small>
+              </div>
+              <div class="stream-toolbar"><div><span class="connection-light" id="connection-light"></span><strong id="connection-label">Disconnected</strong><span class="stream-meta" id="stream-meta">Ready to connect</span></div><button class="text-button" id="clear-events">Clear events</button></div>
+              <div class="stream-diagnostics"><span id="stream-last-id">Last event ID: —</span><span id="stream-heartbeat">Last heartbeat: —</span></div>
+              <div class="event-feed" id="event-feed" aria-live="polite"><div class="empty-stream"><span>⌁</span><strong>No events yet</strong><p>Connect to the stream to receive published incident events.</p></div></div>
+              <div class="stream-foot"><span id="event-count">0 events</span><label class="pause-toggle"><input type="checkbox" id="pause-events"> Pause rendering</label></div>
+            </div>
+            <h2>Authenticated audience SSE</h2>
+            <p>The console supports streaming fetch, named events, numeric replay cursors, deduplication, and heartbeats. Audience connections remain locked until session authorization and backend credential forwarding exist. Native browser EventSource cannot set arbitrary headers: never connect it directly with shared audience tokens. The audience endpoint references provide server-only examples.</p>
+            <h2>Legacy compatibility example (not audience-scoped)</h2>
+            <div class="code-block"><div class="code-block-head"><span>TERMINAL</span><button class="copy-button" data-copy="curl -N 'https://api.nycalert.ai/v1/incidents/stream?since_id=0'">Copy</button></div><pre><code>curl -N 'https://api.nycalert.ai/v1/incidents/stream?since_id=0'</code></pre></div>
+            <h2>Browser EventSource</h2>
+            <p>EventSource reconnects automatically, but browsers only dispatch event names with registered listeners. This console uses a streaming fetch parser to observe both default and named events.</p>
+            <div class="code-block"><div class="code-block-head"><span>JAVASCRIPT</span><button class="copy-button" data-copy="const source = new EventSource('https://api.nycalert.ai/v1/incidents/stream');&#10;source.onmessage = ({ data, lastEventId }) => console.log(lastEventId, data);&#10;source.onerror = () => console.warn('Stream disconnected; EventSource will retry.');">Copy</button></div><pre><code>const source = new EventSource(
+  'https://api.nycalert.ai/v1/incidents/stream'
+);
+source.onmessage = ({ data, lastEventId }) =&gt;
+  console.log(lastEventId, data);
+source.onerror = () =&gt;
+  console.warn('Stream disconnected; EventSource will retry.');</code></pre></div>
+          </section>
+
+          <section id="errors-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> REFERENCE</div>
+            <h1 class="page-title">Errors &amp; validation</h1>
+            <p class="page-lead">The API returns HTTP status codes and response bodies. This portal displays the actual status and body for unsuccessful requests.</p>
+            <div class="schema-table">
+              <div class="schema-row schema-head"><span>STATUS</span><span>MEANING</span><span>CONTRACT</span></div>
+              <div class="schema-row"><code>200</code><span>Successful response</span><span>Advertised for GET operations</span></div>
+              <div class="schema-row"><code>422</code><span>Validation error</span><span>Advertised for parameterized operations</span></div>
+              <div class="schema-row"><code>501</code><span>Not implemented</span><span>Advertised for editorial approval</span></div>
+            </div>
+            <p class="muted">Other HTTP statuses may be returned, but are not listed as documented OpenAPI responses for every operation.</p>
+            <h2>FastAPI validation response</h2>
+            <div class="code-block"><div class="code-block-head"><span>JSON</span></div><pre><code>{
+  "detail": [
+    {
+      "loc": ["query", "limit"],
+      "msg": "Input should be greater than or equal to 1",
+      "type": "greater_than_equal"
+    }
+  ]
+}</code></pre></div>
+            <h2>Validation error shape</h2>
+            <div class="code-block"><div class="code-block-head"><span>TYPESCRIPT</span></div><pre><code>interface ValidationError {
+  loc: Array&lt;string | number&gt;;
+  msg: string;
+  type: string;
+  input?: unknown;
+  ctx?: Record&lt;string, unknown&gt;;
+}
+
+interface HTTPValidationError {
+  detail?: ValidationError[];
+}</code></pre></div>
+          </section>
+
+          <section id="openapi-page" class="page">
+            <div class="eyebrow"><span class="eyebrow-line"></span> REFERENCE</div>
+            <h1 class="page-title">OpenAPI specification</h1>
+            <p class="page-lead">The live OpenAPI document is the authoritative API contract used by this portal.</p>
+            <div class="info-banner" id="spec-message"><span>i</span><p>Loading the live specification…</p></div>
+            <div class="openapi-actions"><a class="button button-primary" href="https://api.nycalert.ai/openapi.json" target="_blank" rel="noreferrer">Open raw specification ↗</a><a class="button button-secondary" href="https://api.nycalert.ai/docs" target="_blank" rel="noreferrer">Open Swagger UI ↗</a></div>
+            <h2>Registered operations</h2><div id="openapi-list" class="endpoint-list"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
