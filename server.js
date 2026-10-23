@@ -19,6 +19,9 @@ const staticFiles = new Map([
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/brand.css", ["brand.css", "text/css; charset=utf-8"]],
+  ["/robots.txt", ["robots.txt", "text/plain; charset=utf-8"]],
+  ["/sitemap.xml", ["sitemap.xml", "application/xml; charset=utf-8"]],
+  ["/assets/nycalert-social.png", ["assets/nycalert-social.png", "image/png"]],
   ["/assets/nycalert-logo.png", ["assets/nycalert-logo.png", "image/png"]]
 ]);
 

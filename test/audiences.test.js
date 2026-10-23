@@ -37,6 +37,51 @@ before(async () => {
 
 after(() => server?.kill());
 
+test("SEO and social metadata are present in server-rendered HTML", async () => {
+  const html = await (await fetch(base)).text();
+  assert.match(html, /<title>NYC Alert \| FDNY &amp; NYPD Incident API System<\/title>/);
+  assert.match(html, /rel="canonical" href="https:\/\/api\.nycalert\.ai\/"/);
+  assert.match(html, /property="og:image" content="https:\/\/api\.nycalert\.ai\/assets\/nycalert-social\.png"/);
+  assert.match(html, /name="twitter:card" content="summary_large_image"/);
+  assert.match(html, /name="description" content="[^"]+SSE streaming[^"]+"/);
+  const schema = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(schema["@context"], "https://schema.org");
+  assert.equal(schema["@graph"].find((item) => item["@type"] === "Organization").url, "https://nycalert.ai/");
+  const webpage = schema["@graph"].find((item) => item["@type"] === "WebPage");
+  assert.equal(webpage.url, "https://api.nycalert.ai/");
+  assert.equal(webpage.primaryImageOfPage.width, 1200);
+});
+
+test("social PNG is publicly served at exactly 1200 by 630 pixels", async () => {
+  const url = `${base}/assets/nycalert-social.png`;
+  const response = await fetch(url);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "image/png");
+  const image = Buffer.from(await response.arrayBuffer());
+  assert.equal(image.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(image.readUInt32BE(16), 1200);
+  assert.equal(image.readUInt32BE(20), 630);
+  const head = await fetch(url, { method: "HEAD" });
+  assert.equal(head.status, 200);
+  assert.equal(Number(head.headers.get("content-length")), image.length);
+  assert.equal((await head.arrayBuffer()).byteLength, 0);
+});
+
+test("crawler files advertise only the canonical document and exclude the proxy", async () => {
+  const robots = await fetch(`${base}/robots.txt`);
+  assert.equal(robots.status, 200);
+  assert.match(robots.headers.get("content-type"), /text\/plain/);
+  const policy = await robots.text();
+  assert.match(policy, /Disallow: \/api-proxy\//);
+  assert.match(policy, /Sitemap: https:\/\/api\.nycalert\.ai\/sitemap\.xml/);
+  const sitemap = await fetch(`${base}/sitemap.xml`);
+  assert.equal(sitemap.status, 200);
+  assert.match(sitemap.headers.get("content-type"), /application\/xml/);
+  const xml = await sitemap.text();
+  assert.match(xml, /<loc>https:\/\/api\.nycalert\.ai\/<\/loc>/);
+  assert.equal((xml.match(/<loc>/g) || []).length, 1);
+});
+
 for (const audience of ["public", "buff", "news", "unknown"]) {
   for (const resource of ["incidents", "stream"]) {
     test(`explicit audience path ${audience} ${resource} stays locked regardless of supplied credentials`, async () => {

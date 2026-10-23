@@ -30,6 +30,14 @@ The live OpenAPI contract is loaded through `/api-proxy/openapi.json`. The porta
 
 The API currently blocks browser CORS requests. The same-origin proxy is therefore required for the in-browser explorer and SSE console to work. Code samples still call the production API directly. The proxy does not expose editorial routes or accept user-supplied upstream URLs.
 
+## SEO and social sharing
+
+The canonical frontend URL is `https://api.nycalert.ai/`; the main NYC Alert website is `https://nycalert.ai/`. The initial HTML includes search descriptions, Open Graph and Twitter large-image cards, and Organization/WebSite/WebPage JSON-LD. Metadata is available without JavaScript. Hash-based documentation sections share the root canonical URL and are not separate sitemap entries.
+
+The branded social image is `assets/nycalert-social.png` (1200 x 630). Regenerate it on Windows with `powershell -NoProfile -File .\scripts\generate-social-image.ps1`; no package installation is required. The server serves this image, `robots.txt`, and `sitemap.xml` directly. Deploy those files with the HTML and ensure crawlers can fetch them anonymously over HTTPS. The crawler policy excludes the interactive `/api-proxy/` routes, not API documentation.
+
+Social platforms cache previews; after deploying an image change, refresh the platform's preview cache. Search indexing and preview updates are not immediate.
+
 ## Audience integration status
 
 **Public access is anonymous by default.** The public selector (and an omitted audience) uses `/v1/incidents` and `/v1/incidents/stream` with no credential header. Both routes were verified to return HTTP 200 anonymously. The deployed `/v1/audiences/public/incidents` and `/v1/audiences/public/stream` currently return HTTP 404; the portal therefore does not send public requests to those paths.
