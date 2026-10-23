@@ -4,7 +4,7 @@ const PUBLIC_API_BASE = "https://api.nycalert.ai";
 const API_BASE = window.NYCALERT_API_BASE || `${window.location.origin}/api-proxy`;
 const OPENAPI_URL = `${API_BASE}/openapi.json`;
 const AUDIENCES = ["public", "buff", "news"];
-const AUDIENCE_ACCESS_MESSAGE = "Audience access is locked until SSO, server-side audience entitlements, and verified API credentials are configured. Selecting an audience does not grant access.";
+const AUDIENCE_ACCESS_MESSAGE = "News and Buff access is locked until server-side authorization and verified credentials are configured. Public REST and SSE feeds require no API key. Selecting a protected audience does not grant access.";
 let selectedAudience = "public";
 
 const endpointDefinitions = [
@@ -29,7 +29,7 @@ const endpointDefinitions = [
 
 const knownParameters = {
   "/v1/audiences/{audience}/incidents": [
-    { name: "audience", in: "path", required: true, type: "string", enum: AUDIENCES, description: "Guide-confirmed audience identifier. Server authorization is required, including for public." },
+    { name: "audience", in: "path", required: true, type: "string", enum: AUDIENCES, description: "News and Buff require authorization. For anonymous Public access, use /v1/incidents rather than an audience path." },
     { name: "limit", type: "integer", default: 20, minimum: 1, maximum: 100, description: "Declared by live OpenAPI; authorized response shape still needs verification." },
     { name: "authorization", in: "header", type: "string", description: "Declared header in live OpenAPI. Exact value scheme is unverified; configured only on a trusted backend." }
   ],
@@ -278,7 +278,23 @@ function audienceOptions() {
   return AUDIENCES.map((audience) => `<option value="${audience}"${audience === selectedAudience ? " selected" : ""}>${audience === "public" ? "Public" : audience === "buff" ? "Buff" : "News"} (${audience})</option>`).join("");
 }
 
+function isPublicFeed(audience) {
+  return !audience || audience === "public" || audience === "legacy";
+}
+
+function feedPath(audience, stream = false) {
+  return isPublicFeed(audience)
+    ? `/v1/incidents${stream ? "/stream" : ""}`
+    : `/v1/audiences/${encodeURIComponent(audience)}/${stream ? "stream" : "incidents"}`;
+}
+
+function updateAudiencePreview() {
+  $("#audience-rest-url").textContent = `${PUBLIC_API_BASE}${feedPath(selectedAudience)}?limit=${$("#audience-limit").value || 20}`;
+  $("#audience-stream-url").textContent = `${PUBLIC_API_BASE}${feedPath(selectedAudience, true)}`;
+}
+
 function selectAudience(audience) {
+  audience = audience || "public";
   if (!AUDIENCES.includes(audience)) {
     showToast("Unknown audience. Choose public, buff, or news.");
     return;
@@ -292,21 +308,28 @@ function selectAudience(audience) {
     endpointAudience.value = audience;
     endpointAudience.dispatchEvent(new Event("input", { bubbles: true }));
   }
-  $("#audience-rest-url").textContent = `${PUBLIC_API_BASE}/v1/audiences/${audience}/incidents?limit=${$("#audience-limit").value || 20}`;
-  $("#audience-stream-url").textContent = `${PUBLIC_API_BASE}/v1/audiences/${audience}/stream`;
-  $("#selected-audience-info").textContent = `${audience} is a guide-confirmed audience ID. Its visibility rules are enforced by the API. This portal has no authenticated entitlement for it; no incident data is fetched or shared when you change selection.`;
+  updateAudiencePreview();
+  const publicFeed = isPublicFeed(audience);
+  $("#audience-open-feed").disabled = !publicFeed;
+  $("#audience-open-feed").textContent = publicFeed ? "Explore public incidents" : "Protected audience locked";
+  $("#audience-access-note").textContent = publicFeed
+    ? "Public is the default when no audience or API key is specified. Public REST and SSE work anonymously; no SSO or API key is required."
+    : AUDIENCE_ACCESS_MESSAGE;
+  $("#selected-audience-info").textContent = publicFeed
+    ? "Public incidents use /v1/incidents and /v1/incidents/stream without credentials. News and Buff are separate, protected feeds."
+    : `${audience} is protected. This portal has no authenticated entitlement for it. No public-feed fallback is used for a protected audience request.`;
   updateSseAudience();
 }
 
 function updateSseAudience() {
-  const legacy = $("#sse-audience").value === "legacy";
+  const legacy = isPublicFeed($("#sse-audience").value);
   $("#sse-type").disabled = !legacy;
   $("#sse-type-help").textContent = legacy
-    ? "Legacy stream: leave blank or enter “all” for unfiltered published events. This is not an audience selector."
+    ? "Public stream: leave blank or enter “all” for unfiltered published events. No API key is required."
     : "Audience streams use the selected audience path; OpenAPI declares no type filter. Access remains locked until authenticated backend authorization is implemented.";
   $("#sse-toggle").disabled = !legacy;
   $("#sse-access-note").textContent = legacy
-    ? "Legacy compatibility mode uses /v1/incidents/stream. It is not an authenticated audience feed and does not substitute for audience authorization."
+    ? "Public is the default feed. Connect without an API key using /v1/incidents/stream. News and Buff remain protected."
     : AUDIENCE_ACCESS_MESSAGE;
   $("#stream-last-id").textContent = "Last event ID: —";
   $("#stream-heartbeat").textContent = "Last heartbeat: —";
@@ -316,21 +339,36 @@ function updateSseAudience() {
   seenEventIds.clear();
   $("#event-count").textContent = "0 events";
   $("#event-feed").innerHTML = `<div class="empty-stream"><span>⌁</span><strong>${legacy ? "No events yet" : "Audience access locked"}</strong><p>${legacy ? "Connect to receive published events." : "No credentials are requested or stored in your browser."}</p></div>`;
-  setConnection(legacy ? "disconnected" : "error", legacy ? "Disconnected" : "Audience access locked", legacy ? "Legacy compatibility mode" : "SSO and server credentials not configured");
+  setConnection(legacy ? "disconnected" : "error", legacy ? "Disconnected" : "Audience access locked", legacy ? "Public feed · no API key required" : "Server authorization and credentials not configured");
 }
 
 function bindAudienceControls() {
   $("#audience-select").innerHTML = audienceOptions();
-  $("#sse-audience").innerHTML = `${audienceOptions()}<option value="legacy">Legacy public stream (not audience-scoped)</option>`;
+  $("#sse-audience").innerHTML = audienceOptions();
   $("#audience-select").addEventListener("change", (event) => selectAudience(event.target.value));
-  $("#audience-limit").addEventListener("input", () => {
-    $("#audience-rest-url").textContent = `${PUBLIC_API_BASE}/v1/audiences/${selectedAudience}/incidents?limit=${$("#audience-limit").value}`;
+  $("#audience-limit").addEventListener("input", updateAudiencePreview);
+  $("#audience-open-feed").addEventListener("click", () => {
+    if (!isPublicFeed(selectedAudience)) return;
+    if (!$("#audience-limit").reportValidity()) return;
+    const index = endpoints.findIndex((endpoint) => endpoint.path === "/v1/incidents" && endpoint.method === "GET");
+    if (index === -1) {
+      showToast("The public incidents route is unavailable in the current contract.");
+      return;
+    }
+    const limit = $("#audience-limit").value || "20";
+    showEndpoint(index);
+    $("#param-limit").value = limit;
+    $("#param-limit").dispatchEvent(new Event("input", { bubbles: true }));
   });
   selectAudience(selectedAudience);
 }
 
 function audienceExamples(endpoint) {
   const resource = endpoint.path.endsWith("/stream") ? "stream" : "incidents";
+  if (isPublicFeed(selectedAudience)) {
+    const publicEndpoint = endpointDefinitions.find((item) => item.path === feedPath("public", resource === "stream"));
+    return endpointExamples(publicEndpoint, operationParameters(publicEndpoint));
+  }
   const url = `${PUBLIC_API_BASE}/v1/audiences/${selectedAudience}/${resource}`;
   const headerSetup = `const audience = process.env.NYCALERT_AUDIENCE;\nconst headerName = process.env.NYCALERT_AUTH_HEADER_NAME;\nconst headerValue = process.env.NYCALERT_AUTH_HEADER_VALUE;\nif (!["news", "buff", "public"].includes(audience || "") || !headerName || !headerValue || headerName.startsWith("REPLACE_") || headerValue.startsWith("REPLACE_")) {\n  throw new Error("Configure verified server-side authentication");\n}`;
   const request = `${headerSetup}\n// After validating the user's session AND entitlement to this audience:\nconst response = await fetch(\`https://api.nycalert.ai/v1/audiences/\${audience}/${resource}\`, {\n  headers: { [headerName]: headerValue, Accept: "${resource === "stream" ? "text/event-stream" : "application/json"}" },\n  cache: "no-store"\n});\nif (!response.ok) throw new Error(\`HTTP \${response.status}\`);`;
@@ -403,7 +441,7 @@ function showEndpoint(index) {
     <h1 class="page-title">${escapeHTML(endpoint.label)}</h1>
     <p class="page-lead">${escapeHTML(endpoint.description)}</p>
     <div class="operation-title">${methodBadge(endpoint.method)}<code>${escapeHTML(endpoint.path)}</code><span>${canExecute ? "Interactive" : "Documentation only"}</span></div>
-    ${endpoint.audienceScoped ? `<div class="info-banner"><span>!</span><p><strong>Audience access locked.</strong> ${escapeHTML(AUDIENCE_ACCESS_MESSAGE)} <a href="#audiences" data-page="audiences">Audience information and verification status</a></p></div>` : ""}
+    ${endpoint.audienceScoped ? `<div class="info-banner"><span>!</span><p><strong>Explicit audience routes are documentation only.</strong> ${escapeHTML(AUDIENCE_ACCESS_MESSAGE)} Anonymous public requests use /v1/incidents and /v1/incidents/stream; the deployed /v1/audiences/public routes currently return 404. <a href="#audiences" data-page="audiences">Open the public feed or review audience access</a></p></div>` : ""}
     ${endpoint.restricted ? `<div class="info-banner"><span>!</span><p>${endpoint.method === "POST" ? "This operation is advertised as HTTP 501. No mutation is performed from this site." : "This endpoint may expose privileged editorial data. It is documented but cannot be called from this public portal."}</p></div>` : ""}
     ${endpoint.path.endsWith("/stream") ? `<div class="info-banner"><span>i</span><p>For a live connection, use the <a href="#sse" data-page="sse">SSE developer console</a>. The event response schema is unspecified; event types are not enumerated by the contract.</p></div>` : ""}
     <h2>Parameters</h2>
@@ -788,12 +826,12 @@ async function consumeSse(response, signal) {
 
 function streamUrl() {
   const source = $("#sse-audience").value;
-  const streamPath = source === "legacy" ? "/v1/incidents/stream" : `/v1/audiences/${encodeURIComponent(source)}/stream`;
+  const streamPath = feedPath(source, true);
   const url = new URL(`${API_BASE.replace(/\/$/, "")}${streamPath}`);
   const since = $("#sse-since").value;
   const type = $("#sse-type").value.trim();
   if (since !== "") url.searchParams.set("since_id", since);
-  if (source === "legacy" && type !== "" && type.toLowerCase() !== "all") url.searchParams.set("type", type);
+  if (isPublicFeed(source) && type !== "" && type.toLowerCase() !== "all") url.searchParams.set("type", type);
   return url.toString();
 }
 
@@ -836,7 +874,7 @@ async function runStream(generation = streamGeneration) {
 }
 
 function startStream() {
-  if ($("#sse-audience").value !== "legacy") {
+  if (!isPublicFeed($("#sse-audience").value)) {
     setConnection("error", "Audience access locked", AUDIENCE_ACCESS_MESSAGE);
     return;
   }
@@ -886,7 +924,7 @@ function bindSseControls() {
   });
   $("#sse-toggle").addEventListener("click", () => streamRunning ? stopStream() : startStream());
   $("#clear-events").addEventListener("click", () => {
-    if ($("#sse-audience").value !== "legacy") {
+    if (!isPublicFeed($("#sse-audience").value)) {
       updateSseAudience();
       return;
     }

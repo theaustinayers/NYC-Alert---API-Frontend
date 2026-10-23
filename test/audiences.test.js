@@ -39,7 +39,7 @@ after(() => server?.kill());
 
 for (const audience of ["public", "buff", "news", "unknown"]) {
   for (const resource of ["incidents", "stream"]) {
-    test(`${audience} ${resource} stays locked regardless of supplied credentials`, async () => {
+    test(`explicit audience path ${audience} ${resource} stays locked regardless of supplied credentials`, async () => {
       const response = await fetch(`${base}/api-proxy/v1/audiences/${audience}/${resource}?limit=20`, {
         headers: { Authorization: "not-a-real-token", "X-Audience": "news" }
       });
@@ -64,7 +64,8 @@ test("portal serves audience controls without credentials", async () => {
   assert.equal(response.status, 200);
   assert.match(html, /id="audience-select"/);
   assert.match(html, /id="sse-audience"/);
-  assert.match(html, /Audience requests locked/);
+  assert.match(html, /id="audience-open-feed"/);
+  assert.match(html, /Public is the default feed with no API key required/);
   assert.ok(!html.includes('name="authorization"'));
 });
 
@@ -100,6 +101,37 @@ test("legacy all keeps the proxy prefix and omits a type filter", () => {
   assert.equal(vm.runInContext("streamUrl()", context), "http://localhost:8080/api-proxy/v1/incidents/stream?since_id=0");
 });
 
+for (const audience of ["", "public"]) {
+  test(`anonymous ${audience || "omitted"} audience uses the public SSE route`, () => {
+    const context = loadClient({
+      "#sse-audience": { value: audience },
+      "#sse-since": { value: "0" },
+      "#sse-type": { value: "all" }
+    });
+    assert.equal(vm.runInContext("streamUrl()", context), "http://localhost:8080/api-proxy/v1/incidents/stream?since_id=0");
+    assert.equal(vm.runInContext(`feedPath(${JSON.stringify(audience)})`, context), "/v1/incidents");
+  });
+}
+
+test("default public connect executes without credentials", async () => {
+  const context = loadClient({
+    "#sse-audience": { value: "public" },
+    "#sse-since": { value: "0", setCustomValidity() {} },
+    "#sse-type": { value: "all", setCustomValidity() {} },
+    "#sse-toggle": { classList: { add() {} } }
+  });
+  let request;
+  context.fetch = async (url, options) => {
+    request = { url: url.toString(), options };
+    return { ok: true, headers: { get: () => "text/event-stream" } };
+  };
+  vm.runInContext("setConnection = () => {}; consumeSse = async () => {}; startStream()", context);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(request.url, "http://localhost:8080/api-proxy/v1/incidents/stream?since_id=0");
+  assert.deepEqual(Object.keys(request.options.headers), ["Accept"]);
+  assert.equal(vm.runInContext("streamRunning", context), true);
+});
+
 test("header parameters never become query parameters", () => {
   const context = loadClient();
   const url = vm.runInContext(`requestUrlFor(
@@ -117,6 +149,16 @@ test("audience examples use selected path and server-only authentication", () =>
   assert.match(examples.javascript, /process\.env\.NYCALERT_AUTH_HEADER_VALUE/);
   assert.ok(!examples.javascript.includes("EventSource"));
   assert.ok(!examples.javascript.includes("Bearer"));
+});
+
+test("public examples use anonymous routes without credential setup", () => {
+  const context = loadClient();
+  for (const resource of ["incidents", "stream"]) {
+    const examples = vm.runInContext(`audienceExamples({path: "/v1/audiences/{audience}/${resource}"})`, context);
+    assert.match(examples.curl, /api\.nycalert\.ai\/v1\/incidents/);
+    assert.ok(!JSON.stringify(examples).includes("AUTH_HEADER"));
+    assert.ok(!JSON.stringify(examples).includes("/audiences/"));
+  }
 });
 
 test("audience connect attempts do not execute even if invoked directly", () => {

@@ -23,7 +23,7 @@ The live OpenAPI contract is loaded through `/api-proxy/openapi.json`. The porta
 - Incident filters use borough, category, status, and agency IDs fetched from the reference endpoints.
 - SSE console parses default and named events, IDs, and heartbeat comments; includes pause/resume, history, and reconnects.
 - Audience selection for `public`, `buff`, and `news`, synchronized between the audience page, REST reference, and SSE console. Changing selection never grants access.
-- The audience UI and docs follow the 2026-10-22 integration guide. Both audience endpoints are registered in live OpenAPI; the anonymous legacy API is not the authenticated audience API.
+- Public is the default feed without an audience or API key: `/v1/incidents` for REST and `/v1/incidents/stream` for SSE. News and Buff remain protected.
 - Editorial queue is documented but neither proxied nor called; approval is not executable.
 - No API credentials, arbitrary proxy targets, or non-GET requests are accepted by the proxy.
 - The proxy allows only known public API routes and rate-limits each client IP to 60 requests per minute.
@@ -32,13 +32,15 @@ The API currently blocks browser CORS requests. The same-origin proxy is therefo
 
 ## Audience integration status
 
-**Audience execution is intentionally locked**, as requested. No SSO provider or audience credentials are configured. Every `/api-proxy/v1/audiences/...` GET returns HTTP 403 with `audience_auth_not_configured` before any upstream request, even for `public`. Other methods are rejected. Supplying headers or changing the audience URL cannot unlock access.
+**Public access is anonymous by default.** The public selector (and an omitted audience) uses `/v1/incidents` and `/v1/incidents/stream` with no credential header. Both routes were verified to return HTTP 200 anonymously. The deployed `/v1/audiences/public/incidents` and `/v1/audiences/public/stream` currently return HTTP 404; the portal therefore does not send public requests to those paths.
 
-The Audiences & access page documents audience-specific REST and SSE paths and verification status. The SSE source defaults to the selected audience in locked mode; the separately labelled **Legacy public stream (not audience-scoped)** remains available for compatibility. It never silently substitutes for an audience stream.
+**News and Buff execution remains locked.** No SSO provider or protected audience credentials are configured. Explicit `/api-proxy/v1/audiences/...` GETs remain blocked with HTTP 403 and `audience_auth_not_configured` before any upstream request. This includes unsupported explicit public-audience paths; public access uses the unscoped routes above. Supplied headers or edited URLs cannot unlock protected feeds. A rejected protected request never silently falls back to public.
+
+The Audiences & access page defaults to Public, offers a public incident explorer and anonymous SSE, and documents the protected route previews. Switching audience clears event history so data from a prior selection is not displayed under a new audience.
 
 Live OpenAPI declares `limit` (1–100, default 20) on audience incidents, `since_id` (nonnegative integer) on audience SSE, and an `authorization` header on both. This confirms the header name, not its value scheme. The exact token scheme, authorized response envelopes, replay semantics, heartbeat interval, rate limits, CORS, and audience-exclusion behavior still need authorized testing. The guide confirms `public`, `buff`, and `news`; it does not specify different delays, priorities, or field visibility for these roles.
 
-To enable protected execution in a future implementation:
+To enable protected News and Buff execution in a future implementation:
 
 1. Choose and configure an identity provider and secure session handling.
 2. Verify sessions and audience entitlements on **every** backend REST/SSE connection.
