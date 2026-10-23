@@ -22,7 +22,7 @@ before(async () => {
     server.once("error", reject);
     server.stdout.on("data", (chunk) => {
       output += chunk;
-      const match = output.match(/http:\/\/localhost:(\d+)/);
+      const match = output.match(/http:\/\/127\.0\.0\.1:(\d+)/);
       if (match) {
         clearTimeout(timeout);
         resolve(match[0]);

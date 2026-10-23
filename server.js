@@ -227,8 +227,8 @@ const cleanupTimer = setInterval(() => {
 }, WINDOW_MS);
 cleanupTimer.unref();
 
-server.listen(PORT, () => {
-  console.log(`NYCAlert API portal listening on http://localhost:${server.address().port}`);
+server.listen(PORT, "127.0.0.1", () => {
+  console.log(`NYCAlert API portal listening on http://127.0.0.1:${server.address().port}`);
 });
 
 function shutdown() {

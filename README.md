@@ -10,7 +10,7 @@ Requires Node.js 18 or newer. No dependency installation is needed.
 node .\server.js
 ```
 
-Visit `http://localhost:8080`.
+Visit `http://127.0.0.1:8080`.
 
 Alternatively, run `npm.cmd start` in PowerShell or `npm start` in a POSIX shell.
 
@@ -67,18 +67,20 @@ node --check .\app.js
 node --check .\server.js
 ```
 
-`PORT` sets the listening port (default `8080`). The server rate-limits by socket IP. Set `TRUST_PROXY=1` only behind a trusted reverse proxy that overwrites `X-Forwarded-For`; otherwise callers can spoof that header.
+`PORT` sets the listening port (default `8080`). The listener binds only to IPv4 loopback (`127.0.0.1`), never all network interfaces. The server rate-limits by socket IP. Set `TRUST_PROXY=1` only behind a trusted reverse proxy that overwrites `X-Forwarded-For`; otherwise callers can spoof that header.
 
 ## Deploy
 
 Run the Node app as an application service behind a TLS-enabled reverse proxy. Cloudflare can provide DNS, TLS, and edge protections in front of the Node service. A static-only hosting plan cannot run the proxy as-is; use a backend service or adapt the same route allowlist and rate limit to a serverless function.
+
+The reverse proxy must reach the Node service at `127.0.0.1:8080` on the same host/network namespace. Remote hosts and separate container network namespaces cannot reach this loopback-only listener directly. Localhost binding is committed in the repository; do not patch `server.js` on the production server after updates.
 
 Example NGINX configuration:
 
 ```nginx
 server {
     listen 443 ssl;
-    server_name developers.nycalert.ai;
+    server_name api.nycalert.ai;
     # Configure ssl_certificate and ssl_certificate_key for your TLS provider.
 
     location / {
